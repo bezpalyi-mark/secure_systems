@@ -4,12 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.khpi.safe-systems</groupId>
-    <artifactId>safe-systems-parent</artifactId>
+    <groupId>org.khpi.secure-systems</groupId>
+    <artifactId>secure-systems-parent</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>lab01</module>
+        <module>lab02</module>
     </modules>
 
     <properties>

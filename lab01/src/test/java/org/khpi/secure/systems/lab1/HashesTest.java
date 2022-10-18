@@ -1,4 +1,4 @@
-package org.khpi.safe.systems.lab1;
+package org.khpi.secure.systems.lab1;
 
 import org.junit.jupiter.api.Test;
 
