@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>secure-systems-lab02</artifactId>
+    <artifactId>secure-systems-utils</artifactId>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -18,10 +18,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.khpi.secure-systems</groupId>
-            <artifactId>secure-systems-utils</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>

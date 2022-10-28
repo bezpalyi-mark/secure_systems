@@ -11,6 +11,7 @@
     <modules>
         <module>lab01</module>
         <module>lab02</module>
+        <module>utils</module>
     </modules>
 
     <properties>
@@ -23,6 +24,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- SELF -->
+            <dependency>
+                <groupId>org.khpi.secure-systems</groupId>
+                <artifactId>secure-systems-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>

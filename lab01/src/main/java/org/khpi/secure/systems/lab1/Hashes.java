@@ -1,6 +1,7 @@
 package org.khpi.secure.systems.lab1;
 
 import org.apache.commons.collections4.ListUtils;
+import org.khpi.secure.systems.utils.ByteUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -27,8 +28,8 @@ public class Hashes {
         byte[] inputByteArray = input.getBytes();
         byte[] sizeInBytesArray = longToBytes((long) inputByteArray.length * Long.BYTES);
 
-        List<Byte> sizeInByteList = toByteList(sizeInBytesArray);
-        List<Byte> byteList = toByteList(inputByteArray);
+        List<Byte> sizeInByteList = ByteUtils.toByteList(sizeInBytesArray);
+        List<Byte> byteList = ByteUtils.toByteList(inputByteArray);
         byteList.add(Byte.MIN_VALUE);
         byteList.addAll(sizeInByteList);
 
@@ -40,11 +41,7 @@ public class Hashes {
 
         for (List<Byte> list512Bit : batch512Bits) {
 
-            List<Integer> words = new ArrayList<>(ListUtils.partition(list512Bit, Integer.BYTES)).stream()
-                    .map(Hashes::toPrimitiveByteArray)
-                    .map(ByteBuffer::wrap)
-                    .map(ByteBuffer::getInt)
-                    .collect(Collectors.toList());
+            List<Integer> words = ByteUtils.splitOnWords(list512Bit);
 
             while (words.size() != Long.SIZE) {
                 words.add(0);
@@ -120,28 +117,10 @@ public class Hashes {
         return rotatedBy17 ^ rotatedBy19 ^ shiftedBy10;
     }
 
-    private static byte[] toPrimitiveByteArray(List<Byte> byteList) {
-        byte[] bytes = new byte[byteList.size()];
-        for (int i = 0; i < byteList.size(); i++) {
-            bytes[i] = byteList.get(i);
-        }
-        return bytes;
-    }
-
     private static byte[] longToBytes(long x) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(x);
         return buffer.array();
-    }
-
-    private static List<Byte> toByteList(byte[] bytesArray) {
-        ArrayList<Byte> byteList = new ArrayList<>(bytesArray.length);
-
-        for (byte value : bytesArray) {
-            byteList.add(value);
-        }
-
-        return byteList;
     }
 
     private static boolean notMultipleOf512(List<Byte> byteList) {
