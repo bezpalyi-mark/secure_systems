@@ -16,7 +16,7 @@
 У цій роботі був реалізований алгоритм для роботи з 128-бітним ключем, шифрувальним режимом ECB та доповненням PKCS5.
 Нам знадобиться декілька константних таблиць:
 
-* #### <a name="sbox_table"></a> S-BOX Таблиця
+#### S-BOX Таблиця
 ````
 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -36,11 +36,11 @@
 0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 ````
 
-* #### <a name="key_exp_round_constants"></a> Константи для раундів алгоритму розширення ключей
+#### Константи для раундів алгоритму розширення ключей
 `0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 
 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xed, 0xc5`
 
-* #### <a name="fixed_mix_matrix"></a> Фіксована матриця для перемішування стовпців
+#### Фіксована матриця для перемішування стовпців
 ````
 2 3 1 1
 1 2 3 1
@@ -103,7 +103,9 @@ for (block in blocks) {
     return ciphertext;
 ````
 
-#### Опишемо алгоритм кожного з методів
+### Опишемо алгоритм кожного з методів
+
+### getRoundKeys
 
 Метод `getRoundKeys` бере ключ, що передає користувач та створює на його основі додаткові ключі, що потрібні на кожному
 раунді. Алгоритм цього методу складається з наступних дій:
@@ -120,3 +122,95 @@ for (block in blocks) {
     * `w[7] = w[6] XOR w[3]`
 4. Новий ключ використовується для створення нових. У нашому випадку нам потрібно 11 ключей.
 
+### addRoundKey
+
+Метод `addRoundKey` додає (XOR) до кожного значення матриці стану значення поточного ключа.
+
+````
+for (int i = 0; i < matrixColumns.size(); i++) {
+    int added = matrixColumns.get(i) ^ roundKey.get(i);
+    result.add((byte) added);
+}
+````
+
+### subBytes
+
+Метод `subBytes` замінює кожен байт матриці на відповідний із таблиці [`S-BOX`](#-s-box-таблиця). В даній роботі 
+ця таблиця реалізовна як одномірний масив, де значення вхідного байта є індексом вихідного. Але перед тим, як дізнатися
+індекс, потрібно перевести тип даних Byte в Integer, тому що нам потрібно, щоб наш перший біт був не знаковим, а додавав
+значення. Тобто нам потрібен `unsigned byte`.
+
+````
+List<Integer> intValues = stateMatrix.stream()
+    .map(bValue -> new byte[]{0, 0, 0, bValue})
+    .map(ByteBuffer::wrap)
+    .map(ByteBuffer::getInt)
+    .collect(Collectors.toList());
+
+    return intValues.stream()
+        .map(S_BOX_TABLE::get)
+        .map(Integer::byteValue)
+        .collect(Collectors.toList());
+````
+
+### shiftRows
+
+Метод `shiftRows` робить круговий зсув рядків матриці стану на число, що відповідає номеру рядку (0-3). В нас завжди 
+всього 4 рядки, тому перший рядок не зсувається, другий зсувається на 1 байт, третій на 2 байти, четвертий на 3 байти.
+
+В цій реалізації всі методи, окрім `shiftRows` виконують операції над стовпцями, тому для цього методу потрібно змінити
+логічне направлення, тобто оперувати над рядками, замість стовпців.
+
+````
+private static List<Byte> changeLogicalDirection(List<Byte> values) {
+    List<Byte> viceVersaDirection = new ArrayList<>(values.size() / 4);
+    List<List<Byte>> forwardDirection = ListUtils.partition(values, MATRIX_ROW_SIZE);
+
+    for (int i = 0; i < MATRIX_ROW_SIZE; i++) {
+        for (int j = 0; j < MATRIX_ROW_SIZE; j++) {
+            Byte value = forwardDirection.get(j).get(i);
+            viceVersaDirection.add(value);
+        }
+
+    }
+
+    return viceVersaDirection;
+}
+````
+
+### mixColumns
+
+Метод `mixColumns` перемножує матрицю стану на [фіксовану матрицю](#-фіксована-матриця-для-перемішування-стовпців), 
+що містить тільки значення 1, 2 та 3. Замість звичайного складання потрібно використати XOR, а перемноження виконується 
+з використанням [полей Гауса](https://uk.wikipedia.org/wiki/%D0%9F%D0%BE%D0%BB%D0%B5_%D0%93%D0%B0%D0%BB%D1%83%D0%B0) у 
+вигляді `GF(2⁸)`.
+
+В коді це виглядає наступним чином:
+
+Множення на 2:
+````
+private static byte gMul2(byte value) {
+    int highBit = value & 0x80;
+    int result = value << 1;
+
+    if (highBit == 0x80) {
+        result = result ^ 0x1b;
+    }
+
+    return (byte) result;
+}
+````
+
+Множення на 3:
+
+````
+private static byte gMul3(byte value) {
+    return (byte) (value ^ gMul2(value));
+}
+````
+
+### Завершення алгоритму
+У кінці алгоритму всі блоки з'єднуються й на виході ми отримуємо зашифровану послідовність.
+
+#### Тест пройдено успішно
+![](./doc/img.png)
