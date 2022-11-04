@@ -56,7 +56,6 @@ public class Aes128 {
         }
 
         List<Byte> byteList = ByteUtils.toByteList(text.getBytes());
-
         List<List<Byte>> blocks = ListUtils.partition(byteList, 128 / Byte.SIZE);
 
         addPKCS5Padding(blocks);
