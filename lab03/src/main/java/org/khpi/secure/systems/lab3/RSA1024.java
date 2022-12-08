@@ -5,25 +5,26 @@ import org.khpi.secure.systems.lab3.model.RSAPrivateKey;
 import org.khpi.secure.systems.lab3.model.RSAPublicKey;
 
 import java.math.BigInteger;
-import java.util.Random;
+import java.security.SecureRandom;
 
 public class RSA1024 {
 
     public static final BigInteger PUBLIC_EXPONENT = BigInteger.valueOf(65537);
+    private static final int LENGTH = 1024;
 
     private RSA1024() {
     }
 
     public static RSAKeyPair generateRSAKeys() {
-        int lp = (1024 + 1) >> 1;
-        int lq = 1024 - lp;
+        int lp = (LENGTH + 1) >> 1;
+        int lq = LENGTH - lp;
 
         BigInteger n;
         BigInteger phi;
 
         do {
-            BigInteger p = BigInteger.probablePrime(lp, new Random());
-            BigInteger q = BigInteger.probablePrime(lq, new Random());
+            BigInteger p = BigInteger.probablePrime(lp, new SecureRandom());
+            BigInteger q = BigInteger.probablePrime(lq, new SecureRandom());
 
             n = p.multiply(q);
 
