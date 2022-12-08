@@ -12,6 +12,8 @@
         <module>lab01</module>
         <module>lab02</module>
         <module>utils</module>
+        <module>lab03</module>
+        <module>lab03/app</module>
     </modules>
 
     <properties>
